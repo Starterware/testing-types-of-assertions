@@ -13,25 +13,25 @@ import org.junit.jupiter.api.Test
 class PersonTest {
     @Test
     fun testSuperMatcherLiteralProperties() {
-        val p = Person.build { lastName = "Smith"; firstName = "John"; age=18 }
+        val person = Person.build { lastName = "Smith"; firstName = "John"; age=18 }
 
         // Example using hamcrest
-        assertThat(p.firstName, equalTo("John"))
-        assertThat(p.lastName, startsWith("S"))
-        assertThat(p.age, greaterThanOrEqualTo(18))
+        assertThat(person.firstName, equalTo("John"))
+        assertThat(person.lastName, startsWith("S"))
+        assertThat(person.age, greaterThanOrEqualTo(18))
 
         // Example using hamcrest - Custom Super Matcher
-        assertThat(p, isAPerson()
+        assertThat(person, isAPerson()
             .withFirstName(equalTo("John"))
             .withLastName(startsWith("S"))
             .withAge(greaterThanOrEqualTo(18)))
 
         // Example using assertj
-        assertThat(p.firstName).isEqualTo("John")
-        assertThat(p.lastName).startsWith("S")
+        assertThat(person.firstName).isEqualTo("John")
+        assertThat(person.lastName).startsWith("S")
 
         // Example using assertj - Custom Assertion
-        assertThat(p)
+        assertThat(person)
             .hasFirstName("John")
             .hasLastNameStartingWith("S")
             .hasAgeGreaterOrEqualTo(18)
@@ -39,51 +39,54 @@ class PersonTest {
 
     @Test
     fun testSuperMatcherWithContainers() {
-        val p = Person.build { firstName = "Summer" }
+        val person = Person.build { firstName = "Summer" }
 
-        p.pets.add("Snowball")
-        p.pets.add("Beethoven")
+        person.pets.add("Snowball")
+        person.pets.add("Beethoven")
 
         // Example using hamcrest
-        assertThat(p.pets, hasItem("Snowball"))
+        assertThat(person.pets, hasItem("Snowball"))
 
         // Example using hamcrest - Custom Super Matcher
-        assertThat(p, isAPerson().withPets(hasItem("Snowball")))
+        assertThat(person, isAPerson().withPets(hasItem("Snowball")))
 
         // Example using assertj
-        assertThat(p.pets).contains("Snowball")
+        assertThat(person.pets).contains("Snowball")
 
         // Example using assertj - Custom Assertion
-        assertThat(p).hasPet("Snowball")
+        assertThat(person).hasPet("Snowball")
     }
 
     @Test
     fun testNestedSuperMatchers() {
         val adr = Address(city="Dublin", eir="D04K2V4")
-        val p = Person.build { firstName = "Marc"; address = adr}
+        val person = Person.build { firstName = "Marc"; address = adr}
 
         // Example using hamcrest
-        assertThat(p.address?.city, equalTo("Dublin"))
-        assertThat(p.address?.eir, equalTo("D04K2V4"))
+        assertThat(person.address?.city, equalTo("Dublin"))
+        assertThat(person.address?.eir, equalTo("D04K2V4"))
 
         // Example using hamcrest - Custom Super Matcher
-        assertThat(p, isAPerson().withAddress(anAddress().withCity("Dublin").withEir(startsWith("D04"))))
-        assertThat(p, isAPerson().withCity("Dublin")) // Simplified?
+        assertThat(person, isAPerson().withAddress(anAddress().withCity("Dublin").withEir(startsWith("D04"))))
+        assertThat(person, isAPerson().withCity("Dublin")) // Simplified?
 
         // Example using assertj
-        assertThat(p.address?.city).isEqualTo("Dublin")
-        assertThat(p.address?.eir).isEqualTo("D04K2V4")
+        assertThat(person.address?.city).isEqualTo("Dublin")
+        assertThat(person.address?.eir).isEqualTo("D04K2V4")
 
         // Example using assertj - Custom Assertion
-        assertThat(p).livesIn("Dublin").livesAtEir("D04K2V4")
+        assertThat(person).livesIn("Dublin").livesAtEir("D04K2V4")
     }
 
     @Test
     fun testRecursively() {
-        val p = Person.build { firstName = "Marc"; address = Address(city="Dublin", eir="D04K2V4")}
-        val p2 = Person.build { firstName = "Marc"; address = Address(city="Dublin", eir="D04K2V4")}
+        val person = Person.build { firstName = "Marc"; age = 18; address = Address(city="Dublin", eir="D04K2V4")}
+        val other_person = Person.build { firstName = "Marc"; age = 22; address = Address(city="Dublin", eir="D04K2V4")}
 
-        Assertions.assertThat(p).isEqualToComparingFieldByFieldRecursively(p2)
-        // some frameworks allow field exclusions
+        // nice way to compare complex types
+        Assertions.assertThat(person)
+                .usingRecursiveComparison()
+                .ignoringFields("age")
+                .isEqualTo(other_person)
     }
 }
